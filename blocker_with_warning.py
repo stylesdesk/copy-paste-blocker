@@ -4,14 +4,16 @@ import keyboard
 import threading
 
 def block_copy_paste():
-    """Block copy, cut, and paste commands."""
-    def on_blocked_key(event):
+    """Block copy, cut, and paste commands using add_hotkey."""
+    def on_blocked_key(): # No 'event' argument needed for add_hotkey's callback
         """Show warning message in red on the screen."""
         show_warning_message()
 
-    keyboard.on_press_key("ctrl+c", on_blocked_key)
-    keyboard.on_press_key("ctrl+v", on_blocked_key)
-    keyboard.on_press_key("ctrl+x", on_blocked_key)
+    # Use add_hotkey for robust combination detection
+    keyboard.add_hotkey("ctrl+c", on_blocked_key)
+    keyboard.add_hotkey("ctrl+v", on_blocked_key)
+    keyboard.add_hotkey("ctrl+x", on_blocked_key)
+    
     keyboard.wait("esc")  # Stop blocking when 'Esc' is pressed
 
 def show_warning_message():
@@ -24,12 +26,22 @@ def show_warning_message():
     # Make the window appear on top
     warning_window.attributes("-topmost", True)
     
+    # Calculate position to center the window (optional, but nice for popups)
+    # Get screen width and height
+    screen_width = warning_window.winfo_screenwidth()
+    screen_height = warning_window.winfo_screenheight()
+    
+    # Calculate x and y coordinates for the center
+    x = (screen_width / 2) - (400 / 2) # 400 is window width
+    y = (screen_height / 2) - (200 / 2) # 200 is window height
+    warning_window.geometry(f'+{int(x)}+{int(y)}') # Set position
+
     # Create a red warning message
     warning_label = tk.Label(
         warning_window, 
         text="YOU CAN NOT USE THIS COMMAND", 
-        font=("Arial", 18, "bold"), # CORRECTED: Added closing quote and 'bold'
-        fg="red" # Added text color red for emphasis
+        font=("Arial", 18, "bold"), 
+        fg="red" 
     )
     warning_label.pack(expand=True)
 
@@ -39,13 +51,14 @@ def show_warning_message():
 # --- Main application setup ---
 # Initialize the main Tkinter window (it can be hidden if you only want the blocker)
 root = tk.Tk()
-root.withdraw() # Hide the main window
+root.withdraw() # Hide the main window to keep it in the background
 
 # Start the copy-paste blocking in a separate thread
-# This prevents the blocking from freezing the Tkinter GUI (though it's hidden)
+# This prevents the blocking from freezing the main Tkinter thread,
+# which is needed for the warning pop-ups to work.
 blocking_thread = threading.Thread(target=block_copy_paste, daemon=True)
 blocking_thread.start()
 
 # Start the Tkinter event loop
-# This is necessary for the warning messages to appear
+# This keeps the application running and allows for GUI events (like pop-up windows)
 root.mainloop()
