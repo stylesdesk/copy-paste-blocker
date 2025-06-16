@@ -9,10 +9,10 @@ def block_copy_paste():
         """Show warning message in red on the screen."""
         show_warning_message()
 
-    # Use add_hotkey for robust combination detection
-    keyboard.add_hotkey("ctrl+c", on_blocked_key)
-    keyboard.add_hotkey("ctrl+v", on_blocked_key)
-    keyboard.add_hotkey("ctrl+x", on_blocked_key)
+    # Use add_hotkey for robust combination detection AND suppress the original key event
+    keyboard.add_hotkey("ctrl+c", on_blocked_key, suppress=True) # ADDED suppress=True
+    keyboard.add_hotkey("ctrl+v", on_blocked_key, suppress=True) # ADDED suppress=True
+    keyboard.add_hotkey("ctrl+x", on_blocked_key, suppress=True) # ADDED suppress=True
     
     keyboard.wait("esc")  # Stop blocking when 'Esc' is pressed
 
@@ -27,11 +27,9 @@ def show_warning_message():
     warning_window.attributes("-topmost", True)
     
     # Calculate position to center the window (optional, but nice for popups)
-    # Get screen width and height
     screen_width = warning_window.winfo_screenwidth()
     screen_height = warning_window.winfo_screenheight()
     
-    # Calculate x and y coordinates for the center
     x = (screen_width / 2) - (400 / 2) # 400 is window width
     y = (screen_height / 2) - (200 / 2) # 200 is window height
     warning_window.geometry(f'+{int(x)}+{int(y)}') # Set position
@@ -49,16 +47,10 @@ def show_warning_message():
     warning_window.after(2000, warning_window.destroy)
 
 # --- Main application setup ---
-# Initialize the main Tkinter window (it can be hidden if you only want the blocker)
 root = tk.Tk()
 root.withdraw() # Hide the main window to keep it in the background
 
-# Start the copy-paste blocking in a separate thread
-# This prevents the blocking from freezing the main Tkinter thread,
-# which is needed for the warning pop-ups to work.
 blocking_thread = threading.Thread(target=block_copy_paste, daemon=True)
 blocking_thread.start()
 
-# Start the Tkinter event loop
-# This keeps the application running and allows for GUI events (like pop-up windows)
 root.mainloop()
